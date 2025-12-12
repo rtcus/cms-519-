@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统计与厂号管理系统</title>
+    <!-- 引入样式和脚本 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 简化样式，保持美观 */
+        :root {
+            --primary-color: #1a3c8b;
+            --secondary-color: #2d5aa0;
+            --accent-color: #4a90e2;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* ================== 侧边导航栏固定 ================== */
+        .sidebar {
+            width: 220px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed; /* 改为固定定位 */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            overflow-y: auto; /* 如果导航内容很多，可以滚动 */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+        
+        .nav-links {
+            list-style: none;
+            padding: 15px 0;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .nav-links li {
+            margin: 5px 0;
+        }
+        
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .nav-links .fas {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            margin-left: 220px; /* 为固定侧边栏留出空间 */
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .page-header h2 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 12px 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+            border-radius: 4px;
+        }
+        
+        .table {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            font-weight: 600;
+            border-top: none;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .search-form .row {
+            margin-bottom: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* 用户信息固定在底部 */
+        .user-info {
+            margin-top: auto;
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 10px;
+        }
+        
+        .compact-form .form-label {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .compact-form .form-control, 
+        .compact-form .form-select {
+            font-size: 0.9rem;
+            padding: 0.4rem 0.75rem;
+        }
+        
+        .table-card-container {
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .table-card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 12px 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .summary-table {
+            font-size: 0.9rem;
+        }
+        
+        .summary-table td {
+            padding: 10px 15px;
+        }
+        
+        .statistics-info {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-top: 1px solid #eaeaea;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        /* ================== 申报货值统计详细数据表头固定 ================== */
+        /* 详细数据表格容器 */
+        #statistics .table-card-container:last-child {
+            max-height: 500px; /* 固定容器高度 */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #statistics .table-card-container:last-child .table-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+        }
+        
+        /* 详细数据表格固定表头 */
+        #detailBodyTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #detailBodyTable thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f8f9fa;
+        }
+        
+        #detailBodyTable thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 12px 8px;
+            z-index: 11;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        #detailBodyTable tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eaeaea;
+            vertical-align: middle;
+        }
+        
+        #detailBodyTable tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        /* 详细数据表格列宽 */
+        #detailBodyTable th:nth-child(1),
+        #detailBodyTable td:nth-child(1) {
+            width: 5%;
+            min-width: 50px;
+        }
+        
+        #detailBodyTable th:nth-child(2),
+        #detailBodyTable td:nth-child(2) {
+            width: 10%;
+            min-width: 100px;
+        }
+        
+        #detailBodyTable th:nth-child(3),
+        #detailBodyTable td:nth-child(3) {
+            width: 12%;
+            min-width: 120px;
+        }
+        
+        #detailBodyTable th:nth-child(4),
+        #detailBodyTable td:nth-child(4) {
+            width: 10%;
+            min-width: 100px;
+        }
+        
+        #detailBodyTable th:nth-child(5),
+        #detailBodyTable td:nth-child(5) {
+            width: 15%;
+            min-width: 150px;
+        }
+        
+        #detailBodyTable th:nth-child(6),
+        #detailBodyTable td:nth-child(6) {
+            width: 18%;
+            min-width: 180px;
+        }
+        
+        #detailBodyTable th:nth-child(7),
+        #detailBodyTable td:nth-child(7) {
+            width: 10%;
+            min-width: 100px;
+        }
+        
+        #detailBodyTable th:nth-child(8),
+        #detailBodyTable td:nth-child(8) {
+            width: 8%;
+            min-width: 80px;
+        }
+        
+        #detailBodyTable th:nth-child(9),
+        #detailBodyTable td:nth-child(9) {
+            width: 12%;
+            min-width: 120px;
+        }
+        
+        /* 统计结果表格固定表头（如果需要） */
+        #statisticsBodyTable {
+            width: 100%;
+        }
+        
+        #statisticsBodyTable thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 12px 8px;
+        }
+        
+        /* ================== 519厂号表格固定表头 ================== */
+        .fixed-table-container {
+            position: relative;
+            height: 400px; /* 默认高度，会根据内容调整 */
+            overflow: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        #cert519Table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #cert519Table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+        }
+        
+        #cert519Table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 12px 8px;
+            z-index: 11;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        #cert519Table tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eaeaea;
+            vertical-align: middle;
+        }
+        
+        #cert519Table tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        /* 519厂号表格列宽 */
+        #cert519Table th:nth-child(1),
+        #cert519Table td:nth-child(1) {
+            width: 8%;
+            min-width: 50px;
+        }
+        
+        #cert519Table th:nth-child(2),
+        #cert519Table td:nth-child(2) {
+            width: 25%;
+            min-width: 150px;
+        }
+        
+        #cert519Table th:nth-child(3),
+        #cert519Table td:nth-child(3) {
+            width: 25%;
+            min-width: 150px;
+        }
+        
+        #cert519Table th:nth-child(4),
+        #cert519Table td:nth-child(4) {
+            width: 20%;
+            min-width: 120px;
+        }
+        
+        #cert519Table th:nth-child(5),
+        #cert519Table td:nth-child(5) {
+            width: 17%;
+            min-width: 100px;
+        }
+        
+        #cert519Table th:nth-child(6),
+        #cert519Table td:nth-child(6) {
+            width: 5%;
+            min-width: 80px;
+        }
+        
+        /* 操作按钮样式调整 */
+        #cert519Table tbody .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            min-width: 60px;
+        }
+        
+        /* ================== 响应式调整 ================== */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: relative; /* 移动端改为相对定位 */
+                width: 100%;
+                height: auto;
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-top: 0;
+            }
+            
+            .nav-links {
+                display: flex;
+                overflow-x: auto;
+            }
+            
+            .nav-links li {
+                flex: 0 0 auto;
+            }
+            
+            .nav-links a {
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .nav-links a:hover,
+            .nav-links a.active {
+                border-left: none;
+                border-bottom: 3px solid var(--accent-color);
+            }
+            
+            /* 移动端调整表格列宽 */
+            #detailBodyTable th,
+            #detailBodyTable td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            #cert519Table th,
+            #cert519Table td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            #cert519Table tbody .btn-sm {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
+                min-width: 50px;
+            }
+            
+            .fixed-table-container {
+                height: 300px;
+            }
+        }
+        
+        /* 表格滚动条样式 */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 侧边栏滚动条样式 */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* 加载中状态 */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            color: #6c757d;
+        }
+        
+        .loading-container .spinner-border {
+            margin-right: 10px;
+        }
+        
+        /* 无数据状态 */
+        .no-data-row {
+            height: 100px;
+        }
+        
+        .no-data-row td {
+            text-align: center;
+            vertical-align: middle;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录模态框 -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="loginModalLabel">统计与厂号管理系统</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginUsername" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="loginUsername" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="请输入密码" required>
+                        </div>
+                    </form>
+                    <div class="alert alert-danger mt-3" id="loginError" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary w-100" id="loginBtn">登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" style="display: none;">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>统计与厂号管理系统</h3>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link active" data-page="statistics">
+                    <i class="fas fa-chart-bar"></i>申报货值统计
+                </a></li>
+                <li><a href="#" class="nav-link" data-page="cert519">
+                    <i class="fas fa-industry"></i>519厂号管理
+                </a></li>
+                <li class="user-info">
+                    <div class="d-flex align-items-center">
+                        <div class="user-avatar" id="userAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div id="userName" style="font-size: 0.9rem;"></div>
+                            <a href="#" class="text-white" id="logoutBtn" style="font-size: 0.8rem; text-decoration: none;">
+                                <i class="fas fa-sign-out-alt"></i> 退出登录
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 申报货值统计页面 -->
+            <div id="statistics" class="page-content">
+                <div class="page-header">
+                    <h2>申报货值统计</h2>
+                    <p class="text-muted">申报货值按时间范围统计</p>
+                </div>
+
+                <!-- 统计条件 -->
+                <div class="card">
+                    <div class="card-header">
+                        统计条件
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end compact-form">
+                            <div class="col-md-3">
+                                <label for="statType" class="form-label">统计方式</label>
+                                <select class="form-select" id="statType">
+                                    <option value="month">按月统计</option>
+                                    <option value="year">按年统计</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6" id="monthGroup">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label for="startMonth" class="form-label">开始月份</label>
+                                        <input type="text" class="form-control date-input" id="startMonth" placeholder="开始年月">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="endMonth" class="form-label">结束月份</label>
+                                        <input type="text" class="form-control date-input" id="endMonth" placeholder="结束年月">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3" id="yearGroup" style="display: none;">
+                                <label for="statYear" class="form-label">年份</label>
+                                <input type="text" class="form-control date-input" id="statYear" placeholder="选择年份">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary" id="queryStatistics">
+                                        <i class="fas fa-search me-1"></i>查询
+                                    </button>
+                                    <button class="btn btn-success" id="exportStatistics">
+                                        <i class="fas fa-download me-1"></i>导出
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计结果汇总 -->
+                <div class="table-card-container">
+                    <div class="table-card-header d-flex justify-content-between align-items-center">
+                        <span>统计结果</span>
+                        <small class="text-muted">共 <span id="totalRecords">0</span> 条数据</small>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table table-striped summary-table" id="statisticsBodyTable">
+                            <thead>
+                                <tr>
+                                    <th width="25%">币制</th>
+                                    <th width="25%">申报数量</th>
+                                    <th width="30%">总货值(原币)</th>
+                                    <th width="20%">统计时间段</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statisticsBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="fas fa-chart-bar me-2"></i>请先查询统计数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="statistics-info">
+                        <i class="fas fa-info-circle me-1"></i>
+                        提示：详细数据最多显示500条，完整数据请导出Excel查看
+                    </div>
+                </div>
+
+                <!-- 详细数据（可选显示） -->
+                <div class="table-card-container">
+                    <div class="table-card-header">
+                        <span>详细数据</span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table table-hover" id="detailBodyTable">
+                            <thead>
+                                <tr>
+                                    <th width="5%">序号</th>
+                                    <th width="10%">申报日期</th>
+                                    <th width="12%">提单号</th>
+                                    <th width="10%">柜号</th>
+                                    <th width="15%">报关单号</th>
+                                    <th width="18%">品名</th>
+                                    <th width="10%">货值</th>
+                                    <th width="8%">币制</th>
+                                    <th width="12%">国家</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">
+                                        <i class="fas fa-table me-2"></i>暂无详细数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 519厂号管理页面 -->
+            <div id="cert519" class="page-content hidden">
+                <div class="page-header">
+                    <h2>519厂号管理</h2>
+                    <p class="text-muted">519证书与厂号信息管理</p>
+                </div>
+
+                <!-- 查询条件 -->
+                <div class="card">
+                    <div class="card-header">
+                        查询条件
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end compact-form">
+                            <div class="col-md-4">
+                                <label for="factoryNoSearch" class="form-label">厂号</label>
+                                <input type="text" class="form-control" id="factoryNoSearch" placeholder="输入厂号">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="certificate519Search" class="form-label">519证书号</label>
+                                <input type="text" class="form-control" id="certificate519Search" placeholder="输入519证书号">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="countrySearch" class="form-label">国家</label>
+                                <input type="text" class="form-control" id="countrySearch" placeholder="输入国家">
+                            </div>
+                            <div class="col-md-12">
+                                <div class="d-flex gap-2 justify-content-end mt-2">
+                                    <button class="btn btn-primary" id="searchCert519">
+                                        <i class="fas fa-search me-1"></i>查询
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="clearCert519">
+                                        <i class="fas fa-times me-1"></i>清空
+                                    </button>
+                                    <button class="btn btn-outline-success" id="syncCert519">
+                                        <i class="fas fa-sync me-1"></i>同步数据
+                                    </button>
+                                    <button class="btn btn-success" id="addCert519">
+                                        <i class="fas fa-plus me-1"></i>新增数据
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 厂号列表 -->
+                <div class="table-card-container">
+                    <div class="table-card-header d-flex justify-content-between align-items-center">
+                        <span>519厂号列表</span>
+                        <small class="text-muted" id="cert519PaginationInfo">共 0 条记录</small>
+                    </div>
+                    
+                    <div class="table-container fixed-table-container">
+                        <table class="table table-striped fixed-table" id="cert519Table">
+                            <thead>
+                                <tr>
+                                    <th width="8%">序号</th>
+                                    <th width="25%">519证书号</th>
+                                    <th width="25%">厂号</th>
+                                    <th width="20%">国家</th>
+                                    <th width="17%">创建时间</th>
+                                    <th width="5%">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cert519Body">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="fas fa-database me-2"></i>暂无数据
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="statistics-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                每页显示：
+                                <select class="form-select form-select-sm d-inline w-auto mx-1" id="cert519PageSizeSelect">
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination pagination-sm mb-0" id="cert519Pagination">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                    </li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">下一页</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增519厂号模态框 -->
+    <div class="modal fade" id="addCert519Modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">新增519厂号</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCert519Form">
+                        <div class="mb-3">
+                            <label for="modalCertificate519" class="form-label">519证书号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modalCertificate519" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalFactoryNo" class="form-label">厂号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modalFactoryNo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalCountry" class="form-label">国家</label>
+                            <input type="text" class="form-control" id="modalCountry" placeholder="输入国家（可选）">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="modalSaveBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.2/dist/av-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/common_system.js"></script>
+    <script src="js/statistics.js"></script>
+    <script src="js/cert519.js"></script>
+</body>
+</html>
