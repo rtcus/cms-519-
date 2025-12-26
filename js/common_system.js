@@ -240,6 +240,12 @@ function initializePageContent(page) {
                 initCert519Page();
             }
             break;
+            
+        case 'modRecord':
+            if (typeof initModRecordPage === 'function') {
+                initModRecordPage();
+            }
+            break;
     }
 }
 
