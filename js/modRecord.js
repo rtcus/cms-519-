@@ -45,18 +45,24 @@ function initModRecordPage() {
 function bindModRecordEvents() {
     try {
         console.log('绑定修撤单记录管理事件（使用事件委托）...');
-        
-        // 移除之前的事件委托监听器（如果存在）
-        const modRecordContainer = document.getElementById('modRecord');
-        if (modRecordContainer) {
-            // 克隆节点以清除所有事件监听器
-            const newContainer = modRecordContainer.cloneNode(true);
-            modRecordContainer.parentNode.replaceChild(newContainer, modRecordContainer);
-        }
-        
+
+        // 不再使用克隆节点的方式清除事件监听器
+        // 改为直接使用事件委托，避免重复绑定
+
         // 使用事件委托，只绑定一次到页面容器
-        const container = document.getElementById('modRecord') || document;
-        
+        const container = document.getElementById('modRecord');
+
+        // 检查是否已经绑定过事件
+        if (modRecordEventsBound && container) {
+            console.log('事件已绑定，跳过重复绑定');
+            return;
+        }
+
+        if (!container) {
+            console.error('找不到 modRecord 容器');
+            return;
+        }
+
         // 查询按钮
         container.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'searchModRecord') {
@@ -65,7 +71,7 @@ function bindModRecordEvents() {
                 loadModRecordData();
             }
         });
-        
+
         // 清空按钮
         container.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'clearModRecord') {
@@ -73,7 +79,7 @@ function bindModRecordEvents() {
                 clearModRecordSearch();
             }
         });
-        
+
         // 新增按钮
         container.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'addModRecord') {
@@ -81,7 +87,7 @@ function bindModRecordEvents() {
                 showAddModRecordModal();
             }
         });
-        
+
         // 导入按钮
         container.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'importModRecord') {
@@ -89,9 +95,9 @@ function bindModRecordEvents() {
                 showImportModal();
             }
         });
-        
+
         // 导出按钮现在使用onclick属性，不再通过事件委托绑定
-        
+
         // 每页显示数量变化
         container.addEventListener('change', function(e) {
             if (e.target && e.target.id === 'modRecordPageSizeSelect') {
@@ -101,17 +107,19 @@ function bindModRecordEvents() {
                 loadModRecordData();
             }
         });
-        
-        // 保存新增记录
-        container.addEventListener('click', function(e) {
+
+        // 保存新增记录 - 绑定到整个document确保模态框也能触发
+        document.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'modalModRecordSaveBtn') {
                 console.log('保存新增记录按钮被点击');
+                e.preventDefault();
+                e.stopPropagation();
                 saveModRecord();
             }
         });
-        
+
         // 保存编辑记录现在使用onclick属性，不再通过事件委托绑定
-        
+
         // 开始导入
         container.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'startImportBtn') {
@@ -119,7 +127,7 @@ function bindModRecordEvents() {
                 startImport();
             }
         });
-        
+
         // 重置列宽
         container.addEventListener('click', function(e) {
             if (e.target && e.target.id === 'resetColumnWidths') {
@@ -127,7 +135,7 @@ function bindModRecordEvents() {
                 resetColumnWidths();
             }
         });
-        
+
         // 日期选择器
         if (document.getElementById('modOperationDate')) {
             flatpickr('#modOperationDate', {
@@ -137,7 +145,7 @@ function bindModRecordEvents() {
                 allowInput: true
             });
         }
-        
+
         // 编辑模态框的日期选择器
         if (document.getElementById('editModOperationDate')) {
             flatpickr('#editModOperationDate', {
@@ -146,9 +154,10 @@ function bindModRecordEvents() {
                 allowInput: true
             });
         }
-        
+
+        modRecordEventsBound = true;
         console.log('事件委托绑定完成');
-        
+
     } catch (error) {
         console.error('绑定修撤单记录管理事件失败:', error);
     }
